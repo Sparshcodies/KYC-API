@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class RegisterRequest(BaseModel):
     user_id: str
@@ -18,9 +18,10 @@ class VerifyResponse(BaseModel):
     result: str
     similarity_score: float | None = None
     
-class IdentifyRequest(BaseModel):
+class IdentifyUsersRequest(BaseModel):
+    user_ids: List[str]
     video_url: str
     output_path: str
 
-class IdentifyResponse(BaseModel):
+class IdentifyUsersResponse(BaseModel):
     output_video: str

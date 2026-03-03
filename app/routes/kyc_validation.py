@@ -1,8 +1,9 @@
+import asyncio
 from fastapi import APIRouter, HTTPException
 from app.utils.storage import fetch_video
-from app.database import insert_embeddings, fetch_embeddings, fetch_all_embeddings
+from app.database import insert_embeddings, fetch_embeddings, fetch_embeddings_for_users
 from app.utils.face_verifier import FaceVerifier
-from app.schema.kyc_schema import RegisterRequest, RegisterResponse, VerifyRequest, VerifyResponse, IdentifyRequest, IdentifyResponse
+from app.schema.kyc_schema import RegisterRequest, RegisterResponse, VerifyRequest, VerifyResponse, IdentifyUsersRequest, IdentifyUsersResponse
 
 router = APIRouter()
 
@@ -33,18 +34,26 @@ async def verify(payload: VerifyRequest):
         "similarity_score": result["probability"]
     }
     
-@router.post("/identify_video", response_model=IdentifyResponse)
-async def identify_video(payload: IdentifyRequest):
+@router.post("/identify_users", response_model=IdentifyUsersResponse)
+async def identify_users(payload: IdentifyUsersRequest):
+
     video_path = fetch_video(payload.video_url)
-    all_embeddings = await fetch_all_embeddings()
-    if not all_embeddings:
+
+    target_embeddings = await fetch_embeddings_for_users(
+        payload.user_ids
+    )
+
+    if not target_embeddings:
         raise HTTPException(
             status_code=404,
-            detail="No registered users found"
+            detail="Requested users not found"
         )
-    output_path = verifier.identify_faces_and_annotate(
+
+    output_path = await asyncio.to_thread(
+        verifier.identify_specific_users,
         video_path,
-        all_embeddings,
+        target_embeddings,
         payload.output_path
     )
+
     return {"output_video": output_path}

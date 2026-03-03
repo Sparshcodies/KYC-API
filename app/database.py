@@ -16,7 +16,7 @@ pool = AsyncConnectionPool(
     conninfo=DB_DSN,
     min_size=1,
     max_size=5,
-    open=False,   # IMPORTANT
+    open=False,
 )
 
 
@@ -55,11 +55,16 @@ async def fetch_embeddings(user_id: str):
 
     return [np.array(r[0], dtype=np.float32) for r in rows]
 
-async def fetch_all_embeddings():
+async def fetch_embeddings_for_users(user_ids):
     async with pool.connection() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
-                "SELECT user_id, embedding FROM kyc_embeddings"
+                """
+                SELECT user_id, embedding
+                FROM kyc_embeddings
+                WHERE user_id = ANY(%s)
+                """,
+                (user_ids,)
             )
             rows = await cur.fetchall()
 

@@ -22,13 +22,13 @@ def ensure_model():
     return
 
 class FaceVerifier:
-    def __init__(self, segment_seconds=2, debug=False, conf_threshold=0.75):
-        ensure_model()
+    def __init__(self, segment_seconds=2, debug=False, conf_threshold=0.65):
+        # ensure_model()
         self.segment_seconds = segment_seconds
         self.debug = debug
         self.threshold = conf_threshold
         self.faceapp = FaceAnalysis(
-            name=MODEL_NAME,
+            name='buffalo_l',
             providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
             root=".",
         )
@@ -123,7 +123,7 @@ class FaceVerifier:
             "probability": probability,
         }
         
-    def identify_faces_and_annotate(self, video_path, all_user_embeddings, output_path):
+    def identify_specific_users(self, video_path, target_embeddings, output_path):
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -139,22 +139,25 @@ class FaceVerifier:
             for face in faces:
                 emb = face.normed_embedding
                 bbox = face.bbox.astype(int)
-                best_user = "UNKNOWN"
+                best_user = None
                 best_score = -1
 
-                for user_id, gallery in all_user_embeddings.items():
-                    sims = [
+                for user_id, gallery in target_embeddings.items():
+                    score = max([
                         float(np.dot(ref_emb, emb))
                         for ref_emb in gallery
-                    ]
-                    score = max(sims)
+                    ])
                     if score > best_score:
                         best_score = score
                         best_user = user_id
                 x1, y1, x2, y2 = bbox
                 label = f"{best_user} ({best_score:.2f})"
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                if best_score >= self.threshold:
+                    color = (0, 255, 0)
+                else:
+                    color = (0, 0, 255)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
             writer.write(frame)
         cap.release()
         writer.release()
