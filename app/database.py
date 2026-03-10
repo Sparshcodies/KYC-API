@@ -3,7 +3,6 @@ import psycopg
 from psycopg_pool import AsyncConnectionPool
 from app.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
-
 DB_DSN = (
     f"host={DB_HOST} "
     f"dbname={DB_NAME} "
@@ -12,23 +11,15 @@ DB_DSN = (
     f"port={DB_PORT}"
 )
 
-pool = AsyncConnectionPool(
-    conninfo=DB_DSN,
-    min_size=1,
-    max_size=5,
-    open=False,
-)
-
+pool = AsyncConnectionPool(conninfo=DB_DSN, min_size=1, max_size=5, open=False)
 
 async def init_db():
     await pool.open()
     print("DB pool started")
 
-
 async def close_db():
     await pool.close()
     print("DB pool closed")
-
 
 async def insert_embeddings(user_id: str, embeddings):
     async with pool.connection() as conn:
@@ -39,10 +30,10 @@ async def insert_embeddings(user_id: str, embeddings):
                     INSERT INTO kyc_embeddings (user_id, embedding)
                     VALUES (%s, %s)
                     """,
-                    (user_id, emb.tolist()),
+                    (user_id, list(emb)),
                 )
         await conn.commit()
-
+    return len(embeddings)
 
 async def fetch_embeddings(user_id: str):
     async with pool.connection() as conn:

@@ -11,4 +11,6 @@ DB_PASS = os.getenv("DB_PASS")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_URL = os.getenv("DB_URL")
 
+MODEL_ROOT = os.getenv("MODEL_DIR", "models")
+MODEL_NAME = os.getenv("MODEL_DIR", "auraface")
 MODEL_DIR = os.getenv("MODEL_DIR", "models/auraface")

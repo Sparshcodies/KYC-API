@@ -6,7 +6,6 @@ from app.utils.face_verifier import FaceVerifier
 from app.schema.kyc_schema import RegisterRequest, RegisterResponse, VerifyRequest, VerifyResponse, IdentifyUsersRequest, IdentifyUsersResponse
 
 router = APIRouter()
-
 verifier = FaceVerifier()
 
 @router.post("/register_reference", response_model=RegisterResponse)
@@ -36,24 +35,14 @@ async def verify(payload: VerifyRequest):
     
 @router.post("/identify_users", response_model=IdentifyUsersResponse)
 async def identify_users(payload: IdentifyUsersRequest):
-
     video_path = fetch_video(payload.video_url)
-
-    target_embeddings = await fetch_embeddings_for_users(
-        payload.user_ids
-    )
-
+    target_embeddings = await fetch_embeddings_for_users(payload.user_ids)
     if not target_embeddings:
-        raise HTTPException(
-            status_code=404,
-            detail="Requested users not found"
-        )
-
+        raise HTTPException(status_code=404, detail="Requested users not found")
     output_path = await asyncio.to_thread(
         verifier.identify_specific_users,
         video_path,
         target_embeddings,
         payload.output_path
     )
-
     return {"output_video": output_path}

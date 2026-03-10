@@ -3,12 +3,9 @@ import random
 import numpy as np
 from pathlib import Path
 from typing import List
-
 from huggingface_hub import snapshot_download
 from insightface.app import FaceAnalysis
-
-MODEL_ROOT = "models"
-MODEL_NAME = "auraface"
+from app.config import MODEL_ROOT, MODEL_NAME
 
 def ensure_model():
     model_path = Path(MODEL_ROOT) / MODEL_NAME
@@ -28,7 +25,7 @@ class FaceVerifier:
         self.debug = debug
         self.threshold = conf_threshold
         self.faceapp = FaceAnalysis(
-            name='buffalo_l',
+            name=MODEL_NAME,
             providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
             root=".",
         )

@@ -25,3 +25,18 @@ class IdentifyUsersRequest(BaseModel):
 
 class IdentifyUsersResponse(BaseModel):
     output_video: str
+    
+class StoreEmbeddingsRequest(BaseModel):
+    user_id: str
+    embeddings: List[List[float]]
+
+class StoreEmbeddingsResponse(BaseModel):
+    status: str
+    embeddings_saved: int
+
+class RetrieveEmbeddingsRequest(BaseModel):
+    user_id: str
+    
+class RetrieveEmbeddingsResponse(BaseModel):
+    user_id: str
+    embeddings: List[List[float]]
